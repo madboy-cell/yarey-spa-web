@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, UserPlus, Globe, UserCheck, UserPlus as AgencyIcon } from 'lucide-react';
 import { Service, Staff, TourOperator, Booking, PaymentType, Channel } from '../types';
 import { NATIONALITIES } from '../constants';
@@ -10,7 +9,8 @@ interface BookingModalProps {
   services: Service[];
   staff: Staff[];
   operators: TourOperator[];
-  onSave: (bookings: Omit<Booking, 'id'>[]) => void;
+  onSave: (bookings: Omit<Booking, 'id'>[], editId?: string) => void;
+  bookingToEdit?: Booking | null;
 }
 
 interface FormGuest {
@@ -22,7 +22,7 @@ interface FormGuest {
   service_id: string;
 }
 
-const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, staff, operators, onSave }) => {
+const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, staff, operators, onSave, bookingToEdit }) => {
   const [isGroup, setIsGroup] = useState(false);
   const [startTime, setStartTime] = useState('10:00');
   const [paymentType, setPaymentType] = useState<PaymentType>('Cash');
@@ -42,6 +42,40 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
       service_id: services[0]?.id || '' 
     }
   ]);
+
+  useEffect(() => {
+    if (bookingToEdit && isOpen) {
+      setIsGroup(!!bookingToEdit.group_ref);
+      setStartTime(bookingToEdit.start_time);
+      setPaymentType(bookingToEdit.payment_type);
+      setChannel(bookingToEdit.channel);
+      setTourOperatorId(bookingToEdit.tour_operator_id || '');
+      
+      setGuests([{
+        id: bookingToEdit.id,
+        guest_name: bookingToEdit.guest_name,
+        nationality: bookingToEdit.nationality || 'Thailand',
+        therapist_type: bookingToEdit.staff_id === 'OUTSOURCE' ? 'outsource' : 'in-house',
+        staff_id: bookingToEdit.staff_id,
+        service_id: bookingToEdit.service_id
+      }]);
+    } else if (isOpen) {
+      // Reset for new booking
+      setIsGroup(false);
+      setStartTime('10:00');
+      setPaymentType('Cash');
+      setChannel('Walk-in');
+      setTourOperatorId('');
+      setGuests([{ 
+        id: Math.random().toString(), 
+        guest_name: '', 
+        nationality: 'Thailand',
+        therapist_type: 'in-house',
+        staff_id: inHouseStaff[0]?.id || '', 
+        service_id: services[0]?.id || '' 
+      }]);
+    }
+  }, [bookingToEdit, isOpen]);
 
   if (!isOpen) return null;
 
@@ -92,25 +126,25 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const groupRef = isGroup ? `GRP-${Date.now()}` : undefined;
-    const today = new Date().toISOString().split('T')[0];
+    const groupRef = isGroup ? (bookingToEdit?.group_ref || `GRP-${Date.now()}`) : undefined;
+    const date = bookingToEdit?.date || new Date().toISOString().split('T')[0];
     
     const newBookings: Omit<Booking, 'id'>[] = guests.map(g => ({
       guest_name: g.guest_name,
       nationality: g.nationality,
       group_ref: groupRef,
-      date: today,
+      date: date,
       start_time: startTime,
       end_time: calculateEndTime(startTime, g.service_id),
       staff_id: g.staff_id,
       service_id: g.service_id,
-      payment_status: 'Pending' as const,
+      payment_status: bookingToEdit?.payment_status || 'Pending',
       payment_type: paymentType,
       channel: channel,
       tour_operator_id: paymentType === 'Credit' ? tourOperatorId : undefined
     }));
 
-    onSave(newBookings);
+    onSave(newBookings, bookingToEdit?.id);
     onClose();
   };
 
@@ -119,8 +153,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
       <div className="bg-cream w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border border-sage/20">
         <div className="sticky top-0 bg-cream p-6 border-b border-sage/10 flex justify-between items-center z-10">
           <div>
-            <h2 className="text-2xl font-serif text-charcoal font-semibold">New Experience Booking</h2>
-            <p className="text-[10px] text-sage font-bold uppercase tracking-widest mt-1">Guest Registration</p>
+            <h2 className="text-2xl font-serif text-charcoal font-semibold">
+              {bookingToEdit ? 'Adjust Appointment' : 'New Experience Booking'}
+            </h2>
+            <p className="text-[10px] text-sage font-bold uppercase tracking-widest mt-1">
+              {bookingToEdit ? `Ref: ${bookingToEdit.id}` : 'Guest Registration'}
+            </p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-sage/10 rounded-full transition-colors">
             <X size={24} className="text-charcoal" />
@@ -152,27 +190,29 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
                 <option value="Tour Operator">Tour Operator</option>
               </select>
             </div>
-            <div className="md:col-span-2 flex items-end pb-1">
-               <label className="flex items-center cursor-pointer group bg-sage/5 px-6 py-3 rounded-2xl border border-sage/10 hover:border-sage/30 transition-all">
-                  <div className="relative">
-                    <input 
-                      type="checkbox" 
-                      className="sr-only" 
-                      checked={isGroup} 
-                      onChange={() => setIsGroup(!isGroup)} 
-                    />
-                    <div className={`w-10 h-5 rounded-full transition-colors ${isGroup ? 'bg-sage' : 'bg-gray-300'}`}></div>
-                    <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${isGroup ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                  </div>
-                  <span className="ml-4 text-sm font-bold text-charcoal uppercase tracking-widest">Group / Couple Session</span>
-               </label>
-            </div>
+            {!bookingToEdit && (
+              <div className="md:col-span-2 flex items-end pb-1">
+                 <label className="flex items-center cursor-pointer group bg-sage/5 px-6 py-3 rounded-2xl border border-sage/10 hover:border-sage/30 transition-all">
+                    <div className="relative">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={isGroup} 
+                        onChange={() => setIsGroup(!isGroup)} 
+                      />
+                      <div className={`w-10 h-5 rounded-full transition-colors ${isGroup ? 'bg-sage' : 'bg-gray-300'}`}></div>
+                      <div className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${isGroup ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                    </div>
+                    <span className="ml-4 text-sm font-bold text-charcoal uppercase tracking-widest">Group / Couple Session</span>
+                 </label>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-sm uppercase tracking-[0.2em] text-sage font-bold">Guest Particulars</h3>
-              {isGroup && (
+              {isGroup && !bookingToEdit && (
                 <button 
                   type="button" 
                   onClick={addGuest}
@@ -258,7 +298,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
                     )}
                   </div>
                   <div className="md:col-span-1 flex justify-center pb-2 self-center">
-                    {guests.length > 1 && (
+                    {guests.length > 1 && !bookingToEdit && (
                       <button 
                         type="button" 
                         onClick={() => removeGuest(guest.id)}
@@ -319,7 +359,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
               type="submit"
               className="w-full bg-charcoal hover:bg-black text-white font-bold py-5 rounded-2xl shadow-2xl transition-all transform active:scale-[0.98] uppercase tracking-[0.2em] text-sm"
             >
-              Complete Booking & Send to Dashboard
+              {bookingToEdit ? 'Save Session Changes' : 'Complete Booking & Send to Dashboard'}
             </button>
           </div>
         </form>

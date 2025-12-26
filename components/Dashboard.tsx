@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Booking, Staff, Service } from '../types';
 import { 
@@ -15,16 +14,20 @@ import {
   MoreVertical,
   MapPin,
   Calendar,
-  UserPlus as AgencyIcon
+  UserPlus as AgencyIcon,
+  Edit3,
+  Trash2
 } from 'lucide-react';
 
 interface DashboardProps {
   bookings: Booking[];
   staff: Staff[];
   services: Service[];
+  onEditBooking: (booking: Booking) => void;
+  onDeleteBooking: (booking: Booking) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ bookings, staff, services }) => {
+const Dashboard: React.FC<DashboardProps> = ({ bookings, staff, services, onEditBooking, onDeleteBooking }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const getBookingService = (serviceId: string) => services.find(s => s.id === serviceId);
@@ -109,8 +112,8 @@ const Dashboard: React.FC<DashboardProps> = ({ bookings, staff, services }) => {
             <div className="col-span-3">Guest & Origin</div>
             <div className="col-span-3">Treatment & Time</div>
             <div className="col-span-3">Staff Assignment</div>
-            <div className="col-span-2">Settlement Status</div>
-            <div className="col-span-1 text-right">Yield</div>
+            <div className="col-span-1">Settlement</div>
+            <div className="col-span-2 text-right">Yield & Actions</div>
           </div>
           
           <div className="flex-1 overflow-y-auto scrollbar-hide">
@@ -184,24 +187,39 @@ const Dashboard: React.FC<DashboardProps> = ({ bookings, staff, services }) => {
                     </div>
 
                     {/* Status */}
-                    <div className="col-span-2 flex flex-col gap-1.5">
+                    <div className="col-span-1 flex flex-col gap-1.5">
                       <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-widest w-fit ${
                         isPaid ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'
                       }`}>
                         {isPaid ? <CheckCircle2 size={12} /> : <Timer size={12} />}
                         {b.payment_status}
                       </div>
-                      <div className="flex items-center gap-1 text-[9px] text-sage/40 font-bold uppercase pl-1">
-                        <CreditCard size={10} /> {b.payment_type} via {b.channel}
-                      </div>
                     </div>
 
-                    {/* Price / Yield */}
-                    <div className="col-span-1 text-right">
-                      <p className="text-base font-serif font-bold text-charcoal">฿{service?.price.toLocaleString()}</p>
-                      <button className="mt-2 text-sage/30 hover:text-sage transition-colors">
-                        <MoreVertical size={16} />
-                      </button>
+                    {/* Price & Actions */}
+                    <div className="col-span-2 text-right">
+                      <div className="flex items-center justify-end gap-6">
+                        <div className="text-right">
+                          <p className="text-base font-serif font-bold text-charcoal">฿{service?.price.toLocaleString()}</p>
+                          <p className="text-[9px] text-sage/40 font-bold uppercase tracking-widest">{b.payment_type}</p>
+                        </div>
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                          <button 
+                            onClick={() => onEditBooking(b)}
+                            className="p-2 text-sage hover:bg-sage/10 rounded-xl transition-colors"
+                            title="Edit Booking"
+                          >
+                            <Edit3 size={18} />
+                          </button>
+                          <button 
+                            onClick={() => onDeleteBooking(b)}
+                            className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition-colors"
+                            title="Cancel Booking"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );

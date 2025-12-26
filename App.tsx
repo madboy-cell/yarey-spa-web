@@ -37,6 +37,7 @@ const App: React.FC = () => {
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [editingOperator, setEditingOperator] = useState<TourOperator | null>(null);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
   const [confirmDelete, setConfirmDelete] = useState<{
     isOpen: boolean;
@@ -50,13 +51,37 @@ const App: React.FC = () => {
     onConfirm: () => {},
   });
 
-  const handleAddBookings = (newBookings: Omit<Booking, 'id'>[]) => {
-    const withIds = newBookings.map(b => ({ 
-      ...b, 
-      id: Math.random().toString(36).substr(2, 9),
-      date: new Date().toISOString().split('T')[0]
-    }));
-    setBookings([...bookings, ...withIds]);
+  const handleSaveBookings = (newBookings: Omit<Booking, 'id'>[], editId?: string) => {
+    if (editId) {
+      // Editing an existing booking
+      const updatedBooking = { ...newBookings[0], id: editId };
+      setBookings(bookings.map(b => b.id === editId ? (updatedBooking as Booking) : b));
+    } else {
+      // Adding new bookings
+      const withIds = newBookings.map(b => ({ 
+        ...b, 
+        id: Math.random().toString(36).substr(2, 9),
+        date: new Date().toISOString().split('T')[0]
+      }));
+      setBookings([...bookings, ...withIds]);
+    }
+    setEditingBooking(null);
+  };
+
+  const handleEditBooking = (booking: Booking) => {
+    setEditingBooking(booking);
+    setIsBookingModalOpen(true);
+  };
+
+  const handleDeleteBooking = (booking: Booking) => {
+    setConfirmDelete({
+      isOpen: true,
+      title: "Cancel Appointment",
+      message: `Are you sure you want to remove the booking for "${booking.guest_name}"? This action cannot be undone.`,
+      onConfirm: () => {
+        setBookings(bookings.filter(b => b.id !== booking.id));
+      }
+    });
   };
 
   const handleSaveService = (serviceData: Service | Omit<Service, 'id'>) => {
@@ -158,7 +183,10 @@ const App: React.FC = () => {
         <header className="h-20 bg-white border-b border-sage/10 flex items-center justify-between px-8 z-10 shrink-0">
           <h2 className="text-xl font-serif text-charcoal font-semibold capitalize">{activeTab}</h2>
           <button 
-            onClick={() => setIsBookingModalOpen(true)}
+            onClick={() => {
+              setEditingBooking(null);
+              setIsBookingModalOpen(true);
+            }}
             className="bg-sage hover:bg-sage-dark text-white px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2 shadow-lg transition-all"
           >
             <Plus size={18} /> New Booking
@@ -166,7 +194,15 @@ const App: React.FC = () => {
         </header>
 
         <div className="flex-1 relative overflow-hidden">
-          {activeTab === 'dashboard' && <Dashboard bookings={bookings} staff={staff} services={services} />}
+          {activeTab === 'dashboard' && (
+            <Dashboard 
+              bookings={bookings} 
+              staff={staff} 
+              services={services} 
+              onEditBooking={handleEditBooking}
+              onDeleteBooking={handleDeleteBooking}
+            />
+          )}
           {activeTab === 'analytics' && <AnalyticsTab bookings={bookings} services={services} staff={staff} />}
           {activeTab === 'revenue' && <RevenueTab bookings={bookings} services={services} operators={operators} />}
           {activeTab === 'cost' && (
@@ -188,7 +224,15 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <BookingModal isOpen={isBookingModalOpen} onClose={() => setIsBookingModalOpen(false)} services={services} staff={staff} operators={operators} onSave={handleAddBookings} />
+      <BookingModal 
+        isOpen={isBookingModalOpen} 
+        onClose={() => setIsBookingModalOpen(false)} 
+        services={services} 
+        staff={staff} 
+        operators={operators} 
+        onSave={handleSaveBookings}
+        bookingToEdit={editingBooking}
+      />
       <ServiceModal isOpen={isServiceModalOpen} onClose={() => setIsServiceModalOpen(false)} onSave={handleSaveService} serviceToEdit={editingService} />
       <StaffModal isOpen={isStaffModalOpen} onClose={() => setIsStaffModalOpen(false)} onSave={handleSaveStaff} staffToEdit={editingStaff} />
       <OperatorModal isOpen={isOperatorModalOpen} onClose={() => setIsOperatorModalOpen(false)} onSave={handleSaveOperator} operatorToEdit={editingOperator} />
