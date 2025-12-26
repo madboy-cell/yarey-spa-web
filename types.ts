@@ -1,7 +1,6 @@
-
 export type Category = 'Massage' | 'Facial' | 'Body Wrap' | 'Scrub' | 'Signature Package';
-export type PaymentType = 'Cash' | 'Card' | 'Credit';
-export type Channel = 'Walk-in' | 'Online' | 'Phone' | 'Tour Operator';
+export type PaymentType = 'Cash' | 'Card';
+export type Channel = 'Walk-in' | 'Online' | 'Phone';
 
 export interface Service {
   id: string;
@@ -35,20 +34,11 @@ export interface Booking {
   payment_status: 'Paid' | 'Pending' | 'Canceled';
   payment_type: PaymentType;
   channel: Channel;
-  tour_operator_id?: string;
 }
 
-export interface TourOperator {
-  id: string;
-  name: string;
-  total_credit_limit: number;
-  outstanding_balance: number;
-}
-
-// Added ServiceCost interface to support unit economics and cost management
+// Simplified to only track COGS (Cost of Goods Sold) per service
 export interface ServiceCost {
   serviceId: string;
   cogs: number;
-  inHouseCost: number;
-  outsourceCost: number;
 }
+

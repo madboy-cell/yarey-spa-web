@@ -3,14 +3,17 @@ import React from 'react';
 import { Staff } from '../types';
 import { Plus, Edit3, Trash2, Search, Award } from 'lucide-react';
 
+// Added language prop to handle translation and satisfy App.tsx requirements
 interface StaffTabProps {
   staff: Staff[];
   onAdd: () => void;
   onEdit: (staff: Staff) => void;
   onDelete: (staff: Staff) => void;
+  language?: 'en' | 'th';
 }
 
-const StaffTab: React.FC<StaffTabProps> = ({ staff, onAdd, onEdit, onDelete }) => {
+// Destructured language from props
+const StaffTab: React.FC<StaffTabProps> = ({ staff, onAdd, onEdit, onDelete, language = 'en' }) => {
   return (
     <div className="p-8 h-full flex flex-col">
       <div className="flex justify-between items-center mb-8">

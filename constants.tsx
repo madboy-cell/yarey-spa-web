@@ -1,5 +1,5 @@
 
-import { Service, Staff, Booking, TourOperator } from './types';
+import { Service, Staff, Booking, ServiceCost } from './types';
 
 export const INITIAL_SERVICES: Service[] = [
   { id: 's1', name: 'Traditional Thai Massage', category: 'Massage', duration: 60, price: 1200, skills_required: ['Thai Massage'] },
@@ -15,21 +15,12 @@ export const INITIAL_STAFF: Staff[] = [
   { id: 'st3', name: 'Som', role: 'Therapist', skills: ['Thai Massage'], color_code: '#767E61', base_salary: 12000, is_outsource: false },
 ];
 
-export const INITIAL_TOUR_OPERATORS: TourOperator[] = [
-  { id: 'to1', name: 'Luxury Phuket Tours', total_credit_limit: 50000, outstanding_balance: 12500 },
-  { id: 'to2', name: 'Andaman Dream Travel', total_credit_limit: 30000, outstanding_balance: 2000 },
-  { id: 'to3', name: 'Blue Sky Holidays', total_credit_limit: 100000, outstanding_balance: 45000 },
-];
-
-const today = new Date().toISOString().split('T')[0];
-const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-
-export const INITIAL_BOOKINGS: Booking[] = [
-  { id: 'b1', guest_name: 'David Smith', nationality: 'United Kingdom', date: today, start_time: '10:00', end_time: '11:00', staff_id: 'st1', service_id: 's1', payment_status: 'Paid', payment_type: 'Cash', channel: 'Walk-in' },
-  { id: 'b2', guest_name: 'Emma Watson', nationality: 'Australia', date: today, start_time: '11:30', end_time: '13:00', staff_id: 'st2', service_id: 's2', payment_status: 'Pending', payment_type: 'Card', channel: 'Online' },
-  { id: 'b3', guest_name: 'Mr. Lee', nationality: 'South Korea', group_ref: 'G123', date: today, start_time: '14:00', end_time: '15:00', staff_id: 'st3', service_id: 's1', payment_status: 'Pending', payment_type: 'Credit', channel: 'Tour Operator', tour_operator_id: 'to1' },
-  { id: 'b4', guest_name: 'Mrs. Lee', nationality: 'South Korea', group_ref: 'G123', date: today, start_time: '14:00', end_time: '15:00', staff_id: 'OUTSOURCE', service_id: 's1', payment_status: 'Pending', payment_type: 'Credit', channel: 'Tour Operator', tour_operator_id: 'to1' },
+export const INITIAL_SERVICE_COSTS: ServiceCost[] = [
+  { serviceId: 's1', cogs: 80 },
+  { serviceId: 's2', cogs: 250 },
+  { serviceId: 's3', cogs: 400 },
+  { serviceId: 's4', cogs: 300 },
+  { serviceId: 's5', cogs: 600 },
 ];
 
 export const NATIONALITIES = [
@@ -37,3 +28,59 @@ export const NATIONALITIES = [
   "USA", "Germany", "France", "South Korea", "Japan", 
   "Singapore", "India", "Other"
 ];
+
+// PROGRAMMATIC MOCK DATA GENERATOR (60 SESSIONS)
+const generateMockBookings = (): Booking[] => {
+  const bookings: Booking[] = [];
+  const now = new Date();
+  
+  // Helper for dates
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  
+  const staffIds = ['st1', 'st2', 'st3', 'OUTSOURCE'];
+  const serviceIds = ['s1', 's2', 's3', 's4', 's5'];
+  const paymentTypes: ('Cash' | 'Card')[] = ['Cash', 'Card'];
+  const channels: ('Walk-in' | 'Online' | 'Phone')[] = ['Walk-in', 'Online', 'Phone'];
+
+  // Current Month Data (30 sessions)
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), Math.min(now.getDate(), i + 1));
+    const startHour = 10 + Math.floor(Math.random() * 8);
+    bookings.push({
+      id: `cur-${i}`,
+      guest_name: `Guest ${i + 1}`,
+      nationality: NATIONALITIES[Math.floor(Math.random() * NATIONALITIES.length)],
+      date: formatDate(d),
+      start_time: `${String(startHour).padStart(2, '0')}:00`,
+      end_time: `${String(startHour + 1).padStart(2, '0')}:00`,
+      staff_id: staffIds[Math.floor(Math.random() * staffIds.length)],
+      service_id: serviceIds[Math.floor(Math.random() * serviceIds.length)],
+      payment_status: 'Paid',
+      payment_type: paymentTypes[Math.floor(Math.random() * paymentTypes.length)],
+      channel: channels[Math.floor(Math.random() * channels.length)]
+    });
+  }
+
+  // Previous Month Data (30 sessions)
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - 1, (i % 28) + 1);
+    const startHour = 10 + Math.floor(Math.random() * 8);
+    bookings.push({
+      id: `prev-${i}`,
+      guest_name: `Past Guest ${i + 1}`,
+      nationality: NATIONALITIES[Math.floor(Math.random() * NATIONALITIES.length)],
+      date: formatDate(d),
+      start_time: `${String(startHour).padStart(2, '0')}:00`,
+      end_time: `${String(startHour + 1).padStart(2, '0')}:00`,
+      staff_id: staffIds[Math.floor(Math.random() * staffIds.length)],
+      service_id: serviceIds[Math.floor(Math.random() * serviceIds.length)],
+      payment_status: 'Paid',
+      payment_type: paymentTypes[Math.floor(Math.random() * paymentTypes.length)],
+      channel: channels[Math.floor(Math.random() * channels.length)]
+    });
+  }
+
+  return bookings;
+};
+
+export const INITIAL_BOOKINGS: Booking[] = generateMockBookings();

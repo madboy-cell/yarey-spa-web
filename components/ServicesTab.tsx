@@ -3,14 +3,17 @@ import React from 'react';
 import { Service } from '../types';
 import { Plus, Edit3, Trash2, Search } from 'lucide-react';
 
+// Added language prop to handle translation and satisfy App.tsx requirements
 interface ServicesTabProps {
   services: Service[];
   onAdd: () => void;
   onEdit: (service: Service) => void;
   onDelete: (service: Service) => void;
+  language?: 'en' | 'th';
 }
 
-const ServicesTab: React.FC<ServicesTabProps> = ({ services, onAdd, onEdit, onDelete }) => {
+// Destructured language from props
+const ServicesTab: React.FC<ServicesTabProps> = ({ services, onAdd, onEdit, onDelete, language = 'en' }) => {
   return (
     <div className="p-8 h-full flex flex-col">
       <div className="flex justify-between items-center mb-8">
