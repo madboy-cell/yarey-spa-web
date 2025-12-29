@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Yarey Spa & Wellness</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,6 +38,19 @@
       }
       .font-serif {
         font-family: 'Cormorant Garamond', serif;
+      }
+      .safe-area-pt { padding-top: env(safe-area-inset-top); }
+      .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
+      .safe-area-pl { padding-left: env(safe-area-inset-left); }
+      .safe-area-pr { padding-right: env(safe-area-inset-right); }
+      
+      /* Hide scrollbar but keep functionality */
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
     </style>
 <script type="importmap">

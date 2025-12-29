@@ -1,9 +1,7 @@
-
+// Initialize Firebase using the modular SDK (v9+)
 import { initializeApp } from "firebase/app";
-// Import getFirestore correctly from the modular firestore path
 import { getFirestore } from "firebase/firestore";
 
-// PASTE YOUR CONFIG FROM STEP 2 HERE
 const firebaseConfig = {
   apiKey: "AIzaSyC7Xc4KjM5lWlnzVb--EWd23RrEIHKyukg",
   authDomain: "yarey-spa.firebaseapp.com",
@@ -13,5 +11,6 @@ const firebaseConfig = {
   appId: "1:142078873366:web:6ec0776cdb78589286ca37"
 };
 
+// Initialize Firebase and Firestore instances
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
