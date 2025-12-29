@@ -118,7 +118,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-cream/30">
-      {/* Metric Cards with Glassmorphism - Stacked on Mobile */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 p-4 md:p-8 shrink-0">
         {[
           { label: t.metrics.arrivals, value: selectedDayBookings.length, icon: Users, suffix: 'guests' },
@@ -140,7 +139,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       <div className="flex-1 overflow-hidden px-4 md:px-8 pb-4 md:pb-8 flex flex-col gap-4 md:gap-6">
-        {/* Controls - Adaptive Layout */}
         <div className="flex flex-col lg:flex-row justify-between items-center gap-3 md:gap-4 shrink-0">
           <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm p-1.5 rounded-2xl border border-sage/10 shadow-sm w-full lg:w-auto justify-between sm:justify-center">
              <button onClick={() => shiftDate(-1)} className="p-2 md:p-2.5 hover:bg-sage/5 rounded-xl text-sage transition-all active:scale-90"><ChevronLeft size={18} /></button>
@@ -159,7 +157,6 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        {/* Timeline Table - Preservation of Line Structure with Scroll */}
         <div className="flex-1 bg-white/80 backdrop-blur-xl rounded-[2rem] md:rounded-[2.5rem] border border-white shadow-2xl shadow-sage/10 overflow-hidden flex flex-col">
           <div className="flex-1 overflow-x-auto scrollbar-hide">
             <div className="min-w-[700px] md:min-w-0 flex flex-col h-full">
@@ -177,7 +174,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     const service = getBookingService(b.service_id);
                     const assignedStaff = getBookingStaff(b.staff_id);
                     const isPaid = b.payment_status === 'Paid';
-                    const isOutsource = b.staff_id === 'OUTSOURCE';
+                    const isOutsource = b.staff_id === 'OUTSOURCE' || assignedStaff?.is_outsource;
                     
                     return (
                       <div 
@@ -209,7 +206,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           {isOutsource ? (
                             <div className="flex items-center gap-2 md:gap-3">
                               <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg md:rounded-xl bg-charcoal text-white flex items-center justify-center shadow-sm"><AgencyIcon size={12} /></div>
-                              <p className={`text-[10px] md:text-xs font-bold text-charcoal/60 truncate ${isThai ? 'leading-relaxed' : ''}`}>{language === 'en' ? 'Agency' : 'สำรอง'}</p>
+                              <p className={`text-[10px] md:text-xs font-bold text-charcoal/60 truncate ${isThai ? 'leading-relaxed' : ''}`}>{language === 'en' ? 'Part-time' : 'ชั่วคราว'}</p>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 md:gap-3">

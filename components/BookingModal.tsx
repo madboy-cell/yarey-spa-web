@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-/* Added Trash2 to imports from lucide-react to fix reference error */
-import { X, Plus, Calendar as CalendarIcon, Clock, ShoppingBag, ChevronLeft, ChevronRight, ChevronDown, Trash2 } from 'lucide-react';
+import { X, Plus, Calendar as CalendarIcon, Clock, ShoppingBag, ChevronLeft, ChevronRight, ChevronDown, Trash2, CheckCircle2, Loader2 } from 'lucide-react';
 import { Service, Staff, Booking, PaymentType, Channel, Salesperson } from '../types';
 
 interface BookingModalProps {
@@ -19,7 +18,7 @@ interface FormGuest {
   id: string;
   guest_name: string;
   nationality: string;
-  therapist_type: 'in-house' | 'outsource';
+  therapist_type: 'in-house' | 'part-time';
   staff_id: string;
   service_id: string;
   payment_status: 'Paid' | 'Pending' | 'Canceled';
@@ -33,6 +32,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
   const [channel, setChannel] = useState<Channel>('Walk-in');
   const [salespersonId, setSalespersonId] = useState<string>('');
   const [guests, setGuests] = useState<FormGuest[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarViewDate, setCalendarViewDate] = useState(new Date());
@@ -43,6 +44,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
 
   useEffect(() => {
     if (isOpen && !prevOpenRef.current) {
+      setShowSuccess(false);
+      setIsSubmitting(false);
       if (bookingToEdit) {
         setBookingDate(bookingToEdit.date);
         setStartTime(bookingToEdit.start_time);
@@ -53,10 +56,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
           id: bookingToEdit.id, 
           guest_name: bookingToEdit.guest_name, 
           nationality: bookingToEdit.nationality || 'Thailand', 
-          therapist_type: bookingToEdit.staff_id === 'OUTSOURCE' ? 'outsource' : 'in-house', 
+          therapist_type: bookingToEdit.staff_id === 'OUTSOURCE' ? 'part-time' : 'in-house', 
           staff_id: bookingToEdit.staff_id, 
           service_id: bookingToEdit.service_id, 
-          payment_status: bookingToEdit.payment_status || 'Pending'
+          payment_status: bookingToEdit.payment_status || 'Paid'
         }]);
       } else {
         const now = new Date();
@@ -70,7 +73,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
           therapist_type: 'in-house', 
           staff_id: inHouseStaff[0]?.id || '', 
           service_id: services[0]?.id || '', 
-          payment_status: 'Pending' 
+          payment_status: 'Paid' 
         }]);
       }
     }
@@ -103,7 +106,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
     setGuests(prev => prev.map(g => {
       if (g.id === id) {
         const updated = { ...g, [field]: value };
-        if (field === 'therapist_type' && value === 'outsource') updated.staff_id = 'OUTSOURCE';
+        if (field === 'therapist_type' && value === 'part-time') updated.staff_id = 'OUTSOURCE';
         else if (field === 'therapist_type' && value === 'in-house') updated.staff_id = inHouseStaff[0]?.id || '';
         return updated;
       }
@@ -111,8 +114,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    
     const groupRef = isGroup ? (bookingToEdit?.group_ref || `GRP-${Date.now()}`) : undefined;
     const newBookings: Omit<Booking, 'id'>[] = guests.map(g => ({
       guest_name: String(g.guest_name).trim(), 
@@ -124,12 +129,22 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
       staff_id: String(g.staff_id), 
       salesperson_id: salespersonId ? String(salespersonId) : undefined,
       service_id: String(g.service_id), 
-      payment_status: g.payment_status || 'Pending', 
+      payment_status: g.payment_status || 'Paid', 
       payment_type: paymentType, 
       channel: channel
     }));
-    onSave(newBookings, bookingToEdit?.id);
-    onClose();
+
+    // Perform save
+    await onSave(newBookings, bookingToEdit?.id);
+    
+    // Trigger Success UI
+    setIsSubmitting(false);
+    setShowSuccess(true);
+    
+    // Auto close after success transition
+    setTimeout(() => {
+      onClose();
+    }, 1200);
   };
 
   const renderCalendar = () => {
@@ -181,7 +196,24 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-0 md:p-4">
-      <div className="bg-cream w-full h-full md:h-auto md:max-w-5xl md:max-h-[90vh] overflow-hidden rounded-none md:rounded-[2.5rem] shadow-2xl border-none md:border md:border-sage/20 flex flex-col">
+      {/* Success Popup Transition */}
+      {showSuccess && (
+        <div className="absolute inset-0 z-[120] flex items-center justify-center pointer-events-none">
+          <div className="bg-white/90 backdrop-blur-xl p-10 rounded-[3rem] shadow-premium flex flex-col items-center gap-6 animate-in zoom-in-90 fade-in duration-300">
+            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg animate-bounce">
+              <CheckCircle2 size={48} strokeWidth={2.5} />
+            </div>
+            <div className="text-center">
+              <h3 className="text-2xl font-serif font-bold text-charcoal">{isThai ? 'บันทึกสำเร็จ' : 'Confirmed'}</h3>
+              <p className="text-[10px] font-black text-sage uppercase tracking-[0.3em] mt-2 opacity-60">
+                {isThai ? 'รายการจองของคุณเรียบร้อยแล้ว' : 'Reservation Secure'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`bg-cream w-full h-full md:h-auto md:max-w-5xl md:max-h-[90vh] overflow-hidden rounded-none md:rounded-[2.5rem] shadow-2xl border-none md:border md:border-sage/20 flex flex-col transition-all duration-500 ${showSuccess ? 'opacity-30 scale-95 blur-sm grayscale' : 'opacity-100 scale-100'}`}>
         <div className="sticky top-0 bg-cream/95 backdrop-blur-md p-5 md:p-6 border-b border-sage/10 flex justify-between items-center z-20 shrink-0 safe-area-pt">
           <div>
             <h2 className={`text-lg md:text-2xl font-serif text-charcoal font-semibold ${isThai ? 'leading-relaxed' : ''}`}>
@@ -245,13 +277,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
                   <label className="text-[8px] uppercase text-sage font-bold">Therapist</label>
                   <div className="flex bg-cream/50 p-1 rounded-xl border border-sage/10">
                      <button type="button" onClick={() => updateGuest(guest.id, 'therapist_type', 'in-house')} className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase transition-all active:scale-95 ${guest.therapist_type === 'in-house' ? 'bg-sage text-white shadow-sm' : 'text-sage hover:bg-sage/5'}`}>In-House</button>
-                     <button type="button" onClick={() => updateGuest(guest.id, 'therapist_type', 'outsource')} className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase transition-all active:scale-95 ${guest.therapist_type === 'outsource' ? 'bg-charcoal text-white shadow-sm' : 'text-sage hover:bg-sage/5'}`}>Agency</button>
+                     <button type="button" onClick={() => updateGuest(guest.id, 'therapist_type', 'part-time')} className={`flex-1 py-2 rounded-lg text-[9px] font-bold uppercase transition-all active:scale-95 ${guest.therapist_type === 'part-time' ? 'bg-charcoal text-white shadow-sm' : 'text-sage hover:bg-sage/5'}`}>Part-time</button>
                   </div>
                   {guest.therapist_type === 'in-house' ? (
                     <select value={guest.staff_id} onChange={(e) => updateGuest(guest.id, 'staff_id', e.target.value)} className="w-full bg-cream/30 border border-sage/10 rounded-xl h-11 px-4 text-xs font-bold outline-none focus:border-sage appearance-none">
                       {inHouseStaff.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
                     </select>
-                  ) : <div className="h-11 bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400 uppercase rounded-xl border border-dashed border-gray-200">On-Call Dispatch</div>}
+                  ) : <div className="h-11 bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400 uppercase rounded-xl border border-dashed border-gray-200">Part-time Dispatch</div>}
                 </div>
                 {guests.length > 1 && (
                   <button type="button" onClick={() => setGuests(prev => prev.filter(g => g.id !== guest.id))} className="lg:col-span-1 p-3 text-red-300 hover:text-red-500 self-center transition-colors active:scale-90">
@@ -261,7 +293,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
               </div>
             ))}
             {isGroup && !bookingToEdit && (
-              <button type="button" onClick={() => setGuests(prev => [...prev, { id: Math.random().toString(), guest_name: '', nationality: 'Thailand', therapist_type: 'in-house', staff_id: inHouseStaff[0]?.id || '', service_id: services[0]?.id || '', payment_status: 'Pending' }])} className="w-full py-4 border-2 border-dashed border-sage/20 rounded-2xl text-sage font-bold text-[10px] uppercase tracking-widest hover:bg-sage/5 transition-all flex items-center justify-center gap-2 active:scale-[0.99]">
+              <button type="button" onClick={() => setGuests(prev => [...prev, { id: Math.random().toString(), guest_name: '', nationality: 'Thailand', therapist_type: 'in-house', staff_id: inHouseStaff[0]?.id || '', service_id: services[0]?.id || '', payment_status: 'Paid' }])} className="w-full py-4 border-2 border-dashed border-sage/20 rounded-2xl text-sage font-bold text-[10px] uppercase tracking-widest hover:bg-sage/5 transition-all flex items-center justify-center gap-2 active:scale-[0.99]">
                 <Plus size={16} /> Add Group Member
               </button>
             )}
@@ -287,8 +319,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, services, 
           </div>
 
           <div className="pt-6 pb-20 md:pb-0 safe-area-pb">
-            <button type="submit" className="w-full bg-charcoal hover:bg-black text-white font-bold h-14 md:h-16 rounded-[1.5rem] md:rounded-[2rem] shadow-xl text-xs uppercase tracking-[0.2em] transition-all active:scale-[0.98]">
-              {bookingToEdit ? 'Save Changes' : 'Confirm Reservation'}
+            <button 
+              type="submit" 
+              disabled={isSubmitting || showSuccess}
+              className={`w-full bg-charcoal hover:bg-black text-white font-bold h-14 md:h-16 rounded-[1.5rem] md:rounded-[2rem] shadow-xl text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-[0.98] ${isSubmitting ? 'opacity-80' : ''}`}
+            >
+              {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : (bookingToEdit ? 'Save Changes' : 'Confirm Reservation')}
             </button>
           </div>
         </form>

@@ -152,7 +152,7 @@ const BookingDetailModal: React.FC<BookingDetailModalProps> = ({
               </div>
               <div>
                 <p className="text-[8px] font-bold text-sage/50 uppercase">{t.therapist}</p>
-                <p className="text-[10px] font-bold text-charcoal truncate">{staffMember?.name || (isOutsource ? 'พนักงาน Agency' : 'พนักงานประจำ')}</p>
+                <p className="text-[10px] font-bold text-charcoal truncate">{staffMember?.name || (isOutsource ? (language === 'en' ? 'Part-time' : 'พนักงานชั่วคราว') : (language === 'en' ? 'Staff' : 'พนักงานประจำ'))}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

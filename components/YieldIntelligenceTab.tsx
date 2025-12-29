@@ -117,7 +117,7 @@ const YieldIntelligenceTab: React.FC<YieldIntelligenceTabProps> = ({
         existing.payout += payout;
       } else {
         map.set(id, { 
-          name: b.staff_id === 'OUTSOURCE' ? (language === 'en' ? 'Agency (On-Call)' : 'สำรอง (Agency)') : (staffMember?.name || 'Unknown'), 
+          name: b.staff_id === 'OUTSOURCE' ? (language === 'en' ? 'Part-time' : 'พนักงานชั่วคราว') : (staffMember?.name || 'Unknown'), 
           hours, 
           payout,
           color: staffMember?.color_code || '#666666'

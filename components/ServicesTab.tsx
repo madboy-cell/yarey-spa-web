@@ -52,7 +52,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
             <div className="flex items-center gap-2 md:gap-3">
               <div className="p-1.5 bg-charcoal/5 rounded-lg text-charcoal/40"><AgencyIcon size={14} /></div>
               <div className="flex flex-col">
-                <span className="text-[7px] md:text-[8px] font-bold text-charcoal/40 uppercase tracking-widest">Agency</span>
+                <span className="text-[7px] md:text-[8px] font-bold text-charcoal/40 uppercase tracking-widest">Part-time</span>
                 <div className="flex items-center gap-0.5">
                   <span className="text-[10px] font-bold text-charcoal/50">฿</span>
                   <input 
