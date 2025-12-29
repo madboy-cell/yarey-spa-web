@@ -274,16 +274,12 @@ const App: React.FC = () => {
     }
   };
 
-  // Member Credit System (New Feature Logic)
-  const handleSaveMember = async (member: { name: string; phone: string; memberId: string; balance: number }) => {
+  const handleGoalUpdate = async (newGoal: number) => {
+    setMonthlyGoal(newGoal);
     if (!db) return;
     try {
-        const payload = JSON.parse(JSON.stringify(member));
-        await addDoc(collection(db, 'members'), payload);
-        console.log("Member saved successfully");
-    } catch (e) { 
-        console.error("Error saving member", e); 
-    }
+      await setDoc(doc(db, 'settings', 'business_goals'), { monthlyGoal: newGoal }, { merge: true });
+    } catch (e) { console.error("Error updating goal:", e); }
   };
 
   const navItems = [
@@ -366,8 +362,8 @@ const App: React.FC = () => {
         {/* Dynamic Tab Content */}
         <div className={`flex-1 relative overflow-hidden ${isMobile ? 'pb-20' : ''}`}>
           <div className="absolute inset-0 overflow-y-auto scrollbar-hide pb-20 md:pb-0">
-            {activeTab === 'health' && <BusinessHealthTab bookings={bookings} services={services} staff={staff} salespersons={salespersons} language={language} inHouseHourlyRate={inHouseHourlyRate} outsourceHourlyRate={outsourceHourlyRate} monthlyRevenueGoal={monthlyGoal} onGoalUpdate={setMonthlyGoal} onEditBooking={onEditBookingHandler} onDeleteBooking={onDeleteBookingHandler} />}
-            {activeTab === 'intelligence' && <YieldIntelligenceTab bookings={bookings} services={services} staff={staff} salespersons={salespersons} monthlyRevenueGoal={monthlyGoal} onGoalUpdate={setMonthlyGoal} language={language} onEditBooking={onEditBookingHandler} onDeleteBooking={onDeleteBookingHandler} inHouseHourlyRate={inHouseHourlyRate} outsourceHourlyRate={outsourceHourlyRate} />}
+            {activeTab === 'health' && <BusinessHealthTab bookings={bookings} services={services} staff={staff} salespersons={salespersons} language={language} inHouseHourlyRate={inHouseHourlyRate} outsourceHourlyRate={outsourceHourlyRate} monthlyRevenueGoal={monthlyGoal} onGoalUpdate={handleGoalUpdate} onEditBooking={onEditBookingHandler} onDeleteBooking={onDeleteBookingHandler} />}
+            {activeTab === 'intelligence' && <YieldIntelligenceTab bookings={bookings} services={services} staff={staff} salespersons={salespersons} monthlyRevenueGoal={monthlyGoal} onGoalUpdate={handleGoalUpdate} language={language} onEditBooking={onEditBookingHandler} onDeleteBooking={onDeleteBookingHandler} inHouseHourlyRate={inHouseHourlyRate} outsourceHourlyRate={outsourceHourlyRate} />}
             {activeTab === 'analytics' && <AnalyticsTab bookings={bookings} services={services} staff={staff} language={language} inHouseHourlyRate={inHouseHourlyRate} outsourceHourlyRate={outsourceHourlyRate} />}
             
             {activeTab === 'services' && (
